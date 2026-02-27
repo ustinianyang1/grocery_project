@@ -16,11 +16,6 @@ env.production.local/
 .pip/
 .pip-cache/
 
-# Data
-local_data.yaml
-*.yaml
-*.yml
-
 # Logs
 *.log
 logs/

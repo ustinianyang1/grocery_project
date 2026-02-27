@@ -1,0 +1,5 @@
+train: D:\grocery_project\train\images
+val: D:\grocery_project\val\images
+test: D:\grocery_project\testImages\images
+nc: 3
+names: ['cheerios', 'soup', 'candle']

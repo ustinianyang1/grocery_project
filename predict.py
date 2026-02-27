@@ -35,7 +35,8 @@ if __name__ == '__main__':
     with open(this_dir / 'yolo_params.yaml', 'r') as file:
         data = yaml.safe_load(file)
         if 'test' in data and data['test'] is not None:
-            images_dir = Path(data['test']) / 'images'
+            # 直接使用配置文件中的测试路径
+            images_dir = Path(data['test'])
         else:
             print("No test field found in yolo_params.yaml, please add the test field with the path to the test images")
             exit()

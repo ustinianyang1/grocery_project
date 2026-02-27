@@ -1,6 +1,11 @@
 import os
 import yaml
 import logging
+
+# 设置环境变量，确保ultralytics在当前目录工作
+os.environ['YOLOv5_HOME'] = os.path.dirname(os.path.abspath(__file__))
+os.environ['YOLO_HOME'] = os.path.dirname(os.path.abspath(__file__))
+
 from ultralytics import YOLO
 
 # 配置日志
@@ -100,24 +105,6 @@ def main():
     log_info(f"类别数量: {nc}")
     log_info(f"类别名称: {names}")
     
-    # 5. 自动生成本地 data.yaml
-    data_config = {
-        'path': BASE_DIR,
-        'train': TRAIN_IMAGES,
-        'val': VAL_IMAGES,
-        'nc': nc,
-        'names': names
-    }
-    
-    yaml_path = os.path.join(BASE_DIR, 'local_data.yaml')
-    try:
-        with open(yaml_path, 'w') as f:
-            yaml.dump(data_config, f, default_flow_style=False)
-        log_info(f"配置文件已生成: {yaml_path}")
-    except Exception as e:
-        log_error(f"生成配置文件失败: {e}")
-        return
-    
     # 6. 启动训练
     try:
         log_info("正在加载 YOLOv11s 模型...")
@@ -136,20 +123,22 @@ def main():
         
         # 检查GPU是否可用
         import torch
-        device = 0 if torch.cuda.is_available() else 'cpu'
+        device = '0' if torch.cuda.is_available() else 'cpu'
         log_info(f"使用设备: {device}")
         
         # 根据设备调整参数
-        if device == 'cpu':
+        if device == '0':
+            batch_size = 16
+            workers = 4
+            log_info("使用GPU训练，自动调整参数")
+        else:
             batch_size = 4
             workers = 2
-            log_warning("未检测到GPU，使用CPU训练，自动调整参数")
-        else:
-            batch_size = -1  # 自动分配batch size
-            workers = 4
+            log_warning("使用CPU训练，自动调整参数")
         
+        # 直接使用 yolo_params.yaml 作为数据配置
         model.train(
-            data=yaml_path,
+            data='yolo_params.yaml',
             epochs=100,
             imgsz=800,
             batch=batch_size,
