@@ -103,8 +103,8 @@ def main():
     
     # 6. 启动训练
     try:
-        log_info("正在加载 YOLOv11s 模型...")
-        model = YOLO('yolo11s.pt')
+        log_info("正在加载 YOLOv11m 模型...")
+        model = YOLO('yolo11m.pt')
         
         log_info("开始训练...")
         log_info("训练参数:")
@@ -114,7 +114,7 @@ def main():
         log_info("- device: 0")
         log_info("- workers: 4")
         log_info("- project: grocery_local")
-        log_info("- name: v11s_optimized")
+        log_info("- name: v11m_optimized")
         log_info("- patience: 20")
         
         # 检查GPU是否可用
@@ -124,7 +124,7 @@ def main():
         
         # 根据设备调整参数
         if device == '0':
-            batch_size = 16
+            batch_size = 8
             workers = 4
             log_info("使用GPU训练，自动调整参数")
         else:
@@ -148,7 +148,7 @@ def main():
             device=device,
             workers=workers,
             project=project_path,
-            name='v11s_optimized',
+            name='v11m_optimized',
             patience=50,
             exist_ok=True,
             weight_decay=0.001,
