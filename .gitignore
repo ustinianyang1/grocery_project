@@ -57,6 +57,7 @@ Thumbs.db
 # Labels and cache
 labels.cache
 *.txt
+!requirements.txt
 
 # Environment variables
 .env
