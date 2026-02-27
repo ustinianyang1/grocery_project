@@ -1,6 +1,8 @@
 import os
 import yaml
 import logging
+import time
+from datetime import datetime
 
 # 设置环境变量，确保ultralytics在当前目录工作
 os.environ['YOLOv5_HOME'] = os.path.dirname(os.path.abspath(__file__))
@@ -11,7 +13,8 @@ from ultralytics import YOLO
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
-    format='[%(levelname)s] %(message)s',
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
         logging.StreamHandler(),
         logging.FileHandler('training.log')
@@ -123,11 +126,11 @@ def main():
         
         # 检查GPU是否可用
         import torch
-        device = 0 if torch.cuda.is_available() else 'cpu'
+        device = '0' if torch.cuda.is_available() else 'cpu'
         log_info(f"使用设备: {device}")
         
         # 根据设备调整参数
-        if device == 0:
+        if device == '0':
             batch_size = 16
             workers = 4
             log_info("使用GPU训练，自动调整参数")
@@ -136,18 +139,26 @@ def main():
             workers = 2
             log_warning("使用CPU训练，自动调整参数")
         
+        # 记录训练开始信息
+        log_info("开始训练，共 100 个epoch")
+        
         # 直接使用 yolo_params.yaml 作为数据配置
         model.train(
             data='yolo_params.yaml',
-            epochs=100,
+            epochs=200,
             imgsz=800,
             batch=batch_size,
             device=device,
             workers=workers,
             project='grocery_local',
             name='v11s_optimized',
-            patience=20,
-            exist_ok=True
+            patience=15,
+            exist_ok=True,
+            weight_decay=0.001,
+            dropout=0.1,
+            copy_paste=0.4,
+            mixup=0.2,
+            cls=1.5
         )
         
         log_info("训练完成！")

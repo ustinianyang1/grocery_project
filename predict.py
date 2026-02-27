@@ -8,7 +8,7 @@ import yaml
 # Function to predict and save images
 def predict_and_save(model, image_path, output_path, output_path_txt):
     # Perform prediction
-    results = model.predict(image_path,conf=0.5)
+    results = model.predict(image_path,conf=0.25)
 
     result = results[0]
     # Draw boxes on the image
