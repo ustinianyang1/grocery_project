@@ -123,11 +123,11 @@ def main():
         
         # 检查GPU是否可用
         import torch
-        device = '0' if torch.cuda.is_available() else 'cpu'
+        device = 0 if torch.cuda.is_available() else 'cpu'
         log_info(f"使用设备: {device}")
         
         # 根据设备调整参数
-        if device == '0':
+        if device == 0:
             batch_size = 16
             workers = 4
             log_info("使用GPU训练，自动调整参数")

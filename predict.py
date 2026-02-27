@@ -55,31 +55,12 @@ if __name__ == '__main__':
         exit()
 
     # Load the YOLO model
-    # 优先使用train.py生成的模型路径
+    # 只使用工作区中的模型路径
     model_path = this_dir / "grocery_local" / "v11s_optimized" / "weights" / "best.pt"
     
-    # 如果上述路径不存在，尝试从runs/detect目录加载
+    # 确保模型文件存在
     if not model_path.exists():
-        detect_path = this_dir / "runs" / "detect"
-        train_folders = [f for f in os.listdir(detect_path) if os.path.isdir(detect_path / f) and f.startswith("train")]
-        if len(train_folders) == 0:
-            raise ValueError("No training folders found")
-        idx = 0
-        if len(train_folders) > 1:
-            choice = -1
-            choices = list(range(len(train_folders)))
-            while choice not in choices:
-                print("Select the training folder:")
-                for i, folder in enumerate(train_folders):
-                    print(f"{i}: {folder}")
-                choice = input()
-                if not choice.isdigit():
-                    choice = -1
-                else:
-                    choice = int(choice)
-            idx = choice
-
-        model_path = detect_path / train_folders[idx] / "weights" / "best.pt"
+        raise ValueError(f"Model file not found: {model_path}\nPlease run train.py first to train the model")
     model = YOLO(model_path)
 
 

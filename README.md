@@ -14,7 +14,23 @@ D:/grocery_project/
 ├── convert_preds_to_csv.py  # 预测结果转换为CSV脚本
 ├── requirements.txt    # 项目依赖文件
 ├── .gitignore          # Git忽略文件
-└── README.md           # 项目文档
+├── README.md           # 项目文档
+├── yolo11s.pt          # YOLOv11s预训练权重
+├── yolo_params.yaml    # 模型配置文件
+├── training.log        # 训练日志
+├── train/              # 训练数据集
+│   ├── images/         # 训练图片
+│   └── labels/         # 训练标签
+├── val/                # 验证数据集
+│   ├── images/         # 验证图片
+│   └── labels/         # 验证标签
+├── testImages/         # 测试数据集
+│   └── images/         # 测试图片
+├── grocery_local/      # 训练结果保存目录
+│   └── v11s_optimized/ # 模型训练结果
+└── predictions/        # 预测结果保存目录
+    ├── images/         # 带标注的预测结果图片
+    └── labels/         # 边界框数据文本文件
 ```
 
 ## 安装指南
@@ -79,9 +95,9 @@ python train.py
 
 训练过程中，模型会自动：
 1. 加载 `yolo_params.yaml` 配置文件
-2. 下载预训练权重 `yolo11s.pt`（如果不存在）
+2. 加载预训练权重 `yolo11s.pt`（如果不存在会自动下载）
 3. 启动训练过程
-4. 将训练结果保存到 `grocery_local/v11s_optimized/` 目录
+4. 将训练结果保存到 `grocery_local/v11s_optimized/` 目录（工作区内）
 5. 生成训练日志文件 `training.log`
 
 ### 验证模型
@@ -111,8 +127,8 @@ python predict.py
 1. 加载 `yolo_params.yaml` 配置文件
 2. 加载训练好的最佳模型（优先从 `grocery_local/v11s_optimized/weights/best.pt` 加载）
 3. 对 `testImages/images/` 目录中的测试图片进行预测
-4. 生成带标注的预测结果图片，保存到 `predictions/images/` 目录
-5. 保存边界框数据到文本文件，保存到 `predictions/labels/` 目录
+4. 生成带标注的预测结果图片，保存到 `predictions/images/` 目录（工作区内）
+5. 保存边界框数据到文本文件，保存到 `predictions/labels/` 目录（工作区内）
 
 ### 转换预测结果
 
@@ -125,15 +141,17 @@ python convert_preds_to_csv.py
 转换过程会：
 1. 读取 `predictions/labels/` 目录中的预测结果
 2. 转换为Kaggle提交格式的CSV文件
-3. 保存为 `submission.csv` 文件
+3. 保存为 `submission.csv` 文件（工作区内）
 
 ### 训练参数
 
 - **epochs**: 100 轮训练
 - **imgsz**: 800 分辨率
 - **batch**: 自动分配（根据显存大小）
-- **device**: 优先使用GPU，无GPU时使用CPU
-- **workers**: 4 个数据加载线程（CPU模式下为2）
+- **device**: 0（使用第0号GPU）
+- **workers**: 4 个数据加载线程
+- **project**: grocery_local（训练结果保存目录）
+- **name**: v11s_optimized（模型训练结果子目录）
 - **patience**: 20 轮早停机制
 
 ## 功能介绍
@@ -145,6 +163,7 @@ python convert_preds_to_csv.py
 5. **完整日志**：详细的训练和验证日志
 6. **灵活的模型加载**：支持从多个路径加载训练好的模型
 7. **严格的结果验证**：转换预测结果时进行严格的验证，确保提交格式正确
+8. **工作区保存**：所有结果都保存在项目工作区内，避免使用YOLO默认目录
 
 ## 贡献指南
 
