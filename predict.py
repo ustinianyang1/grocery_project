@@ -104,12 +104,14 @@ def predict_and_save(model, image_path, output_path, output_path_txt,
             labels = []
             
             for pred in result.object_prediction_list:
-                if pred.score >= WBF_SCORE_THRESH:
+                # SAHI 的 score 是 PredictionScore 对象，需要转换为 float
+                score_value = float(pred.score.value) if hasattr(pred.score, 'value') else float(pred.score)
+                if score_value >= WBF_SCORE_THRESH:
                     bbox = pred.bbox
                     x1, y1 = bbox.minx, bbox.miny
                     x2, y2 = bbox.maxx, bbox.maxy
                     boxes.append([x1/w, y1/h, x2/w, y2/h])
-                    scores.append(pred.score)
+                    scores.append(score_value)
                     labels.append(pred.category.id)
             
             if boxes:
@@ -281,6 +283,9 @@ if __name__ == '__main__':
                     device='cuda' if torch.cuda.is_available() else 'cpu',
                     load_at_init=True,
                 )
+                # 确保模型已加载
+                if hasattr(sahi_model, 'load_model'):
+                    sahi_model.load_model()
                 log_info("SAHI 模型加载成功")
             except Exception as e:
                 log_warning(f"SAHI 模型加载失败: {e}")
