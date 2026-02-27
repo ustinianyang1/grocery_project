@@ -11,13 +11,14 @@ os.environ['YOLO_HOME'] = os.path.dirname(os.path.abspath(__file__))
 from ultralytics import YOLO
 
 # 配置日志
+log_filename = 'training.log'
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
+    format='%(asctime)s [%(levelname)s] [TRAIN] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('training.log')
+        logging.FileHandler(log_filename, encoding='utf-8')
     ]
 )
 
@@ -61,17 +62,9 @@ def main():
     
     # 2. 配置本地路径
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    
-    # 使用配置文件中的路径，或使用默认路径
-    if 'train' in params and params['train']:
-        TRAIN_IMAGES = params['train']
-    else:
-        TRAIN_IMAGES = os.path.join(BASE_DIR, 'train/train/images')
-    
-    if 'val' in params and params['val']:
-        VAL_IMAGES = params['val']
-    else:
-        VAL_IMAGES = os.path.join(BASE_DIR, 'val/val/images')
+
+    TRAIN_IMAGES = params['train']
+    VAL_IMAGES = params['val']
     
     # 确保路径是绝对路径
     if not os.path.isabs(TRAIN_IMAGES):
@@ -140,29 +133,36 @@ def main():
             log_warning("使用CPU训练，自动调整参数")
         
         # 记录训练开始信息
-        log_info("开始训练，共 100 个epoch")
+        log_info("开始训练，共 300 个epoch")
+        
+        # 构建绝对路径，确保结果保存到工作区
+        project_path = os.path.join(BASE_DIR, 'grocery_local')
+        log_info(f"训练结果保存目录: {project_path}")
         
         # 直接使用 yolo_params.yaml 作为数据配置
         model.train(
             data='yolo_params.yaml',
-            epochs=200,
+            epochs=300,
             imgsz=800,
             batch=batch_size,
             device=device,
             workers=workers,
-            project='grocery_local',
+            project=project_path,
             name='v11s_optimized',
-            patience=15,
+            patience=50,
             exist_ok=True,
             weight_decay=0.001,
             dropout=0.1,
             copy_paste=0.4,
             mixup=0.2,
-            cls=1.5
+            cls=1.5,
+            lr0=0.001,
+            cos_lr=True,
+            warmup_epochs=5.0
         )
         
         log_info("训练完成！")
-        log_info("训练结果保存路径: grocery_local/v11s_optimized/")
+        log_info(f"训练结果保存路径: {os.path.join(project_path, 'v11s_optimized')}")
         
     except Exception as e:
         log_error(f"训练失败: {e}")

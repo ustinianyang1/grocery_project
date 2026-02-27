@@ -15,9 +15,8 @@ D:/grocery_project/
 ├── requirements.txt    # 项目依赖文件
 ├── .gitignore          # Git忽略文件
 ├── README.md           # 项目文档
-├── yolo11s.pt          # YOLOv11s预训练权重
 ├── yolo_params.yaml    # 模型配置文件
-├── training.log        # 训练日志
+├── submission.csv      # Kaggle提交文件
 ├── train/              # 训练数据集
 │   ├── images/         # 训练图片
 │   └── labels/         # 训练标签
@@ -32,6 +31,12 @@ D:/grocery_project/
     ├── images/         # 带标注的预测结果图片
     └── labels/         # 边界框数据文本文件
 ```
+
+**训练过程中会生成的文件：**
+- `yolo11s.pt` - YOLOv11s预训练权重（自动下载）
+- `training.log` - 训练日志
+- `validation.log` - 验证日志
+- `predict.log` - 预测日志
 
 ## 安装指南
 
@@ -96,9 +101,11 @@ python train.py
 训练过程中，模型会自动：
 1. 加载 `yolo_params.yaml` 配置文件
 2. 加载预训练权重 `yolo11s.pt`（如果不存在会自动下载）
-3. 启动训练过程
-4. 将训练结果保存到 `grocery_local/v11s_optimized/` 目录（工作区内）
-5. 生成训练日志文件 `training.log`
+3. 检测设备（优先使用GPU，无GPU时自动切换到CPU）
+4. 根据设备自动调整训练参数（batch size和workers）
+5. 启动训练过程（300个epoch）
+6. 将训练结果保存到 `grocery_local/v11s_optimized/` 目录（工作区内）
+7. 生成训练日志文件 `training.log`
 
 ### 验证模型
 
@@ -125,10 +132,11 @@ python predict.py
 
 预测过程会：
 1. 加载 `yolo_params.yaml` 配置文件
-2. 加载训练好的最佳模型（优先从 `grocery_local/v11s_optimized/weights/best.pt` 加载）
-3. 对 `testImages/images/` 目录中的测试图片进行预测
+2. 从 `grocery_local/v11s_optimized/weights/best.pt` 加载训练好的最佳模型
+3. 对配置文件中指定的测试图片目录中的测试图片进行预测
 4. 生成带标注的预测结果图片，保存到 `predictions/images/` 目录（工作区内）
-5. 保存边界框数据到文本文件，保存到 `predictions/labels/` 目录（工作区内）
+5. 保存边界框数据（包含置信度）到文本文件，保存到 `predictions/labels/` 目录（工作区内）
+6. 生成预测日志文件 `predict.log`
 
 ### 转换预测结果
 
@@ -140,30 +148,42 @@ python convert_preds_to_csv.py
 
 转换过程会：
 1. 读取 `predictions/labels/` 目录中的预测结果
-2. 转换为Kaggle提交格式的CSV文件
-3. 保存为 `submission.csv` 文件（工作区内）
+2. 对预测结果进行严格验证（确保格式正确）
+3. 转换为Kaggle提交格式的CSV文件
+4. 保存为 `submission.csv` 文件（工作区内）
+5. 输出详细的转换统计信息
 
 ### 训练参数
 
-- **epochs**: 100 轮训练
+- **epochs**: 300 轮训练
 - **imgsz**: 800 分辨率
-- **batch**: 自动分配（根据显存大小）
-- **device**: 0（使用第0号GPU）
-- **workers**: 4 个数据加载线程
+- **batch**: 自动分配（GPU: 16, CPU: 4）
+- **device**: 自动检测（优先使用GPU）
+- **workers**: 自动分配（GPU: 4, CPU: 2）
 - **project**: grocery_local（训练结果保存目录）
 - **name**: v11s_optimized（模型训练结果子目录）
-- **patience**: 20 轮早停机制
+- **patience**: 50 轮早停机制
+- **weight_decay**: 0.001
+- **dropout**: 0.1
+- **copy_paste**: 0.4
+- **mixup**: 0.2
+- **cls**: 1.5
+- **lr0**: 0.001
+- **cos_lr**: True
+- **warmup_epochs**: 5.0
 
 ## 功能介绍
 
 1. **自动路径检测**：脚本会自动检测本地路径，无需手动配置
-2. **智能Batch分配**：根据显卡显存自动分配最佳Batch Size
+2. **智能参数调整**：根据设备类型自动调整batch size和workers数量
 3. **设备自适应**：自动检测GPU是否可用，无GPU时自动切换到CPU模式
-4. **早停机制**：当验证精度不再提升时自动停止训练
-5. **完整日志**：详细的训练和验证日志
-6. **灵活的模型加载**：支持从多个路径加载训练好的模型
+4. **早停机制**：当验证精度不再提升时自动停止训练（patience=50）
+5. **完整日志**：详细的训练、验证和预测日志
+6. **工作区保存**：所有结果都保存在项目工作区内，避免使用YOLO默认目录
 7. **严格的结果验证**：转换预测结果时进行严格的验证，确保提交格式正确
-8. **工作区保存**：所有结果都保存在项目工作区内，避免使用YOLO默认目录
+8. **增强的数据增强**：使用copy_paste和mixup等数据增强技术提升模型性能
+9. **优化的训练参数**：包含weight_decay、dropout等正则化参数，避免过拟合
+10. **灵活的学习率策略**：使用cosine学习率调度和warmup机制
 
 ## 贡献指南
 
