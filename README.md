@@ -11,37 +11,39 @@
 
 ## 目录结构
 
+> 带 `*` 标注的文件/目录在 `.gitignore` 中，运行后生成或需手动准备，不纳入版本控制。
+
 ```text
-D:/grocery_project/
-├── train.py
-├── validate.py
-├── predict.py
-├── convert_preds_to_csv.py
-├── yolo_params.yaml
-├── requirements.txt
+grocery_project/
+├── train.py                  # 训练脚本
+├── validate.py               # 验证脚本
+├── predict.py                # 预测脚本
+├── convert_preds_to_csv.py   # 预测结果转 CSV 脚本
+├── yolo_params.yaml          # YOLO 数据配置文件
+├── requirements.txt          # Python 依赖列表
 ├── README.md
-├── yolo11m.pt                # 当前训练脚本默认使用的预训练权重
-├── yolo26n.pt                # 其他实验版本权重
-├── submission.csv            # 提交文件（由转换脚本生成）
-├── training.log              # 训练日志（运行后生成）
-├── validation.log            # 验证日志（运行后生成）
-├── predict.log               # 预测日志（运行后生成）
-├── grocery_local/
+├── .gitignore
+├── yolo11m.pt              * # 预训练权重（训练前需下载）
+├── submission.csv          * # 提交文件（由转换脚本生成）
+├── training.log            * # 训练日志（运行后生成）
+├── validation.log          * # 验证日志（运行后生成）
+├── predict.log             * # 预测日志（运行后生成）
+├── grocery_local/          * # 训练输出目录（运行后生成）
 │   └── v11m_amp/
 │       ├── args.yaml
 │       ├── results.csv
 │       └── weights/
 │           ├── best.pt
 │           └── last.pt
-├── train/
+├── train/                  * # 训练数据（需手动准备）
 │   ├── images/
 │   └── labels/
-├── val/
+├── val/                    * # 验证数据（需手动准备）
 │   ├── images/
 │   └── labels/
-├── testImages/
+├── testImages/             * # 测试数据（需手动准备）
 │   └── images/
-└── predictions/
+└── predictions/            * # 预测结果（运行后生成）
     ├── images/
     └── labels/
 ```
@@ -171,17 +173,15 @@ python convert_preds_to_csv.py --preds_folder predictions/labels --output_csv su
 - 对每行预测结果进行字段数量与数值合法性校验
 - 以测试集图片清单为基准生成 `submission.csv`
 
-## 多版本说明
-
-项目中存在多个版本/权重文件（如 `yolo11m.pt`、`yolo26n.pt` 以及历史训练目录）。
+## 版本说明
 
 当前脚本默认使用的主线版本是：
 - 训练：`yolo11m.pt`
 - 输出实验名：`v11m_amp`
 - 验证/预测：`grocery_local/v11m_amp/weights/best.pt`
 
-如需切换到其他版本，请同步修改：
-- `train.py` 中的预训练权重与 `name`
+如需切换到其他预训练权重或实验名，请同步修改：
+- `train.py` 中的预训练权重路径与 `name`
 - `validate.py` / `predict.py` 中的模型路径
 
 ## 注意事项
