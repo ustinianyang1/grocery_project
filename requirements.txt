@@ -7,6 +7,3 @@ torchvision==0.16.2+cu121
 numpy<2
 albumentations
 pandas
-scikit-learn
-ensemble-boxes
-sahi
