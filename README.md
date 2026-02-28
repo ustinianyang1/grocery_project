@@ -2,79 +2,79 @@
 
 ## 项目概述
 
-本项目基于YOLOv11模型，用于检测和识别超市商品。通过本地训练的方式，利用自定义数据集实现高精度的商品检测。项目支持完整的训练、验证、预测和结果转换流程。
+本项目基于 YOLO 系列模型进行超市商品检测，当前默认训练版本为 **YOLOv11m + AMP**。项目已迭代多个版本，支持完整的训练、验证、预测与提交文件转换流程。
+
+当前主流程对应目录为：
+- 训练输出：`grocery_local/v11m_amp/`
+- 验证/预测权重：`grocery_local/v11m_amp/weights/best.pt`
+- 预测输出：`predictions/images/` 与 `predictions/labels/`
 
 ## 目录结构
 
-```
+```text
 D:/grocery_project/
-├── train.py            # 本地训练脚本
-├── validate.py         # 模型验证脚本
-├── predict.py          # 模型预测脚本
-├── convert_preds_to_csv.py  # 预测结果转换为CSV脚本
-├── requirements.txt    # 项目依赖文件
-├── .gitignore          # Git忽略文件
-├── README.md           # 项目文档
-├── yolo_params.yaml    # 模型配置文件
-├── submission.csv      # Kaggle提交文件
-├── train/              # 训练数据集
-│   ├── images/         # 训练图片
-│   └── labels/         # 训练标签
-├── val/                # 验证数据集
-│   ├── images/         # 验证图片
-│   └── labels/         # 验证标签
-├── testImages/         # 测试数据集
-│   └── images/         # 测试图片
-├── grocery_local/      # 训练结果保存目录
-│   └── v11s_optimized/ # 模型训练结果
-└── predictions/        # 预测结果保存目录
-    ├── images/         # 带标注的预测结果图片
-    └── labels/         # 边界框数据文本文件
+├── train.py
+├── validate.py
+├── predict.py
+├── convert_preds_to_csv.py
+├── yolo_params.yaml
+├── requirements.txt
+├── README.md
+├── yolo11m.pt                # 当前训练脚本默认使用的预训练权重
+├── yolo26n.pt                # 其他实验版本权重
+├── submission.csv            # 提交文件（由转换脚本生成）
+├── training.log              # 训练日志（运行后生成）
+├── validation.log            # 验证日志（运行后生成）
+├── predict.log               # 预测日志（运行后生成）
+├── grocery_local/
+│   └── v11m_amp/
+│       ├── args.yaml
+│       ├── results.csv
+│       └── weights/
+│           ├── best.pt
+│           └── last.pt
+├── train/
+│   ├── images/
+│   └── labels/
+├── val/
+│   ├── images/
+│   └── labels/
+├── testImages/
+│   └── images/
+└── predictions/
+    ├── images/
+    └── labels/
 ```
 
-**训练过程中会生成的文件：**
-- `yolo11s.pt` - YOLOv11s预训练权重（自动下载）
-- `training.log` - 训练日志
-- `validation.log` - 验证日志
-- `predict.log` - 预测日志
+## 环境与安装
 
-## 安装指南
-
-### 1. 环境准备
-
-确保你使用的是项目虚拟环境，而非系统全局环境：
+### 1) 创建并激活虚拟环境
 
 ```bash
-# 创建虚拟环境
 python -m venv venv
 
-# 激活虚拟环境
 # Windows
 venv\Scripts\activate
-# Linux/Mac
+# Linux / Mac
 source venv/bin/activate
 ```
 
-### 2. 安装依赖
-
-使用 requirements.txt 文件安装项目依赖：
+### 2) 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. 准备数据集
+`requirements.txt` 当前包含：
+- `ultralytics`
+- `torch==2.1.2+cu121`、`torchvision==0.16.2+cu121`
+- `opencv-python==4.8.0.76`
+- `albumentations`、`pandas`、`pyyaml`
+- `numpy<2`
 
-从Kaggle下载数据集并按照以下结构组织：
-- 创建 `train/images/` 目录，放入训练图片
-- 创建 `train/labels/` 目录，放入训练标签
-- 创建 `val/images/` 目录，放入验证图片
-- 创建 `val/labels/` 目录，放入验证标签
-- 创建 `testImages/images/` 目录，放入测试图片
+## 数据与配置
 
-### 4. 配置模型参数
-
-项目已自带 `yolo_params.yaml` 文件，无需手动创建。文件中设置了模型的类别信息和数据集路径：
+配置文件：`yolo_params.yaml`
 
 ```yaml
 train: D:\grocery_project\train\images
@@ -84,119 +84,112 @@ nc: 3
 names: ['cheerios', 'soup', 'candle']
 ```
 
-- **nc**: 类别数量（3个类别：cheerios、soup、candle）
-- **names**: 类别名称列表
-- **train/val/test**: 数据集的绝对路径
+说明：
+- `nc`: 类别数（当前为 3）
+- `names`: 类别名称
+- `train/val/test`: 数据路径（可改为相对路径，脚本会自动拼接项目根目录）
 
 ## 使用说明
 
-### 训练模型
-
-运行训练脚本开始训练：
+### 1) 训练
 
 ```bash
 python train.py
 ```
 
-训练过程中，模型会自动：
-1. 加载 `yolo_params.yaml` 配置文件
-2. 加载预训练权重 `yolo11s.pt`（如果不存在会自动下载）
-3. 检测设备（优先使用GPU，无GPU时自动切换到CPU）
-4. 根据设备自动调整训练参数（batch size和workers）
-5. 启动训练过程（300个epoch）
-6. 将训练结果保存到 `grocery_local/v11s_optimized/` 目录（工作区内）
-7. 生成训练日志文件 `training.log`
+当前训练脚本关键行为：
+- 默认模型：`YOLO('yolo11m.pt')`
+- 设备：自动检测（CUDA 可用时 `device='0'`，否则 `cpu`）
+- 输出目录：`grocery_local/v11m_amp/`
+- 日志文件：`training.log`
 
-### 验证模型
+当前主要训练参数：
+- `epochs=300`
+- `imgsz=640`
+- `batch=8 (GPU) / 4 (CPU)`
+- `workers=4 (GPU) / 2 (CPU)`
+- `optimizer='AdamW'`
+- `amp=True`
+- `cache=True`
+- `weight_decay=0.001`
+- `dropout=0.1`
+- `copy_paste=0.3`
+- `mixup=0.15`
+- `cls=1.2`
+- `lr0=0.001`
+- `cos_lr=True`
+- `warmup_epochs=5.0`
 
-训练完成后，运行验证脚本评估模型性能：
+### 2) 验证
 
 ```bash
 python validate.py
 ```
 
-验证过程会：
-1. 加载 `yolo_params.yaml` 配置文件
-2. 加载训练好的最佳模型 `grocery_local/v11s_optimized/weights/best.pt`
-3. 在验证集上执行评估
-4. 输出详细的验证指标（mAP、精确率、召回率等）
-5. 生成验证日志文件 `validation.log`
+当前验证脚本：
+- 默认读取模型：`grocery_local/v11m_amp/weights/best.pt`
+- 使用数据配置：`yolo_params.yaml`
+- 验证参数：`imgsz=800`、`device=0`、`workers=4`
+- 日志文件：`validation.log`
 
-### 预测模型
+说明：
+- 当前 `validate.py` 固定使用 `device=0`，仅在有可用 CUDA 设备时可直接运行。
 
-使用训练好的模型进行预测：
+### 3) 预测
 
 ```bash
 python predict.py
 ```
 
-预测过程会：
-1. 加载 `yolo_params.yaml` 配置文件
-2. 从 `grocery_local/v11s_optimized/weights/best.pt` 加载训练好的最佳模型
-3. 对配置文件中指定的测试图片目录中的测试图片进行预测
-4. 生成带标注的预测结果图片，保存到 `predictions/images/` 目录（工作区内）
-5. 保存边界框数据（包含置信度）到文本文件，保存到 `predictions/labels/` 目录（工作区内）
-6. 生成预测日志文件 `predict.log`
+当前预测脚本：
+- 默认读取模型：`grocery_local/v11m_amp/weights/best.pt`
+- 测试目录来源：`yolo_params.yaml` 中的 `test`
+- 置信度阈值：`conf=0.15`
+- 支持图片后缀：`.jpg`、`.png`
+- 输出目录：
+    - 可视化图片：`predictions/images/`
+    - 标签文本：`predictions/labels/`
+- 日志文件：`predict.log`
 
-### 转换预测结果
+标签文件每行格式为：
+`class_id confidence x_center y_center width height`
 
-将预测结果转换为CSV格式：
+### 4) 转换为 Kaggle 提交 CSV
 
 ```bash
 python convert_preds_to_csv.py
 ```
 
-转换过程会：
-1. 读取 `predictions/labels/` 目录中的预测结果
-2. 对预测结果进行严格验证（确保格式正确）
-3. 转换为Kaggle提交格式的CSV文件
-4. 保存为 `submission.csv` 文件（工作区内）
-5. 输出详细的转换统计信息
+或自定义参数：
 
-### 训练参数
+```bash
+python convert_preds_to_csv.py --preds_folder predictions/labels --output_csv submission.csv --test_images_folder testImages/images
+```
 
-- **epochs**: 300 轮训练
-- **imgsz**: 800 分辨率
-- **batch**: 自动分配（GPU: 16, CPU: 4）
-- **device**: 自动检测（优先使用GPU）
-- **workers**: 自动分配（GPU: 4, CPU: 2）
-- **project**: grocery_local（训练结果保存目录）
-- **name**: v11s_optimized（模型训练结果子目录）
-- **patience**: 50 轮早停机制
-- **weight_decay**: 0.001
-- **dropout**: 0.1
-- **copy_paste**: 0.4
-- **mixup**: 0.2
-- **cls**: 1.5
-- **lr0**: 0.001
-- **cos_lr**: True
-- **warmup_epochs**: 5.0
+转换脚本会：
+- 读取 `predictions/labels/*.txt`
+- 对每行预测结果进行字段数量与数值合法性校验
+- 以测试集图片清单为基准生成 `submission.csv`
 
-## 功能介绍
+## 多版本说明
 
-1. **自动路径检测**：脚本会自动检测本地路径，无需手动配置
-2. **智能参数调整**：根据设备类型自动调整batch size和workers数量
-3. **设备自适应**：自动检测GPU是否可用，无GPU时自动切换到CPU模式
-4. **早停机制**：当验证精度不再提升时自动停止训练（patience=50）
-5. **完整日志**：详细的训练、验证和预测日志
-6. **工作区保存**：所有结果都保存在项目工作区内，避免使用YOLO默认目录
-7. **严格的结果验证**：转换预测结果时进行严格的验证，确保提交格式正确
-8. **增强的数据增强**：使用copy_paste和mixup等数据增强技术提升模型性能
-9. **优化的训练参数**：包含weight_decay、dropout等正则化参数，避免过拟合
-10. **灵活的学习率策略**：使用cosine学习率调度和warmup机制
+项目中存在多个版本/权重文件（如 `yolo11m.pt`、`yolo26n.pt` 以及历史训练目录）。
 
-## 贡献指南
+当前脚本默认使用的主线版本是：
+- 训练：`yolo11m.pt`
+- 输出实验名：`v11m_amp`
+- 验证/预测：`grocery_local/v11m_amp/weights/best.pt`
 
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 打开 Pull Request
+如需切换到其他版本，请同步修改：
+- `train.py` 中的预训练权重与 `name`
+- `validate.py` / `predict.py` 中的模型路径
+
+## 注意事项
+
+- 训练脚本使用 `imgsz=640`，验证脚本使用 `imgsz=800`，属于当前代码中的既定配置。
+- 预测脚本当前仅处理后缀为 `.jpg` 和 `.png` 的图片文件。
+- 转换脚本默认读取 `predictions/labels`，并以 `testImages/images` 的图片清单作为提交基准。
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
-## 联系方式
-
-如有问题或建议，请通过 GitHub Issues 提交。
+本项目采用 MIT 许可证（如仓库内提供 `LICENSE` 文件则以其为准）。
