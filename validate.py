@@ -54,7 +54,7 @@ def main():
     # 2. 配置路径 (强制使用绝对路径以避免目录混淆)
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     # 路径指向你之前训练生成的最佳模型权重
-    model_path = os.path.join(BASE_DIR, 'grocery_local', 'v11s_optimized', 'weights', 'best.pt')
+    model_path = os.path.join(BASE_DIR, 'grocery_local', 'v11m_amp', 'weights', 'best.pt')
     data_path = os.path.join(BASE_DIR, 'yolo_params.yaml')
     
     log_info(f"项目根目录: {BASE_DIR}")

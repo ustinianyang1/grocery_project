@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     # 加载YOLO模型
     # 只使用工作区中的模型路径
-    model_path = this_dir / "grocery_local" / "v11s_optimized" / "weights" / "best.pt"
+    model_path = this_dir / "grocery_local" / "v11m_amp" / "weights" / "best.pt"
     log_info(f"模型路径: {model_path}")
     
     # 确保模型文件存在
